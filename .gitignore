@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Virtual environments
+venv/
+env/
+.venv/
+ENV/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.DS_Store
+Thumbs.db
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Project-specific
+data/processed/
+data/splits/
+models/*.joblib
+models/dataset_hash.txt
+results/experiment_*.xlsx
+results/plots/*.png
+exports/
+
+# Streamlit
+.streamlit/secrets.toml
+
+# Logs
+*.log
+
+# Dane (zdjęcia — za duże na git)
+/data/baza_danych
+
+# Claude Code — lokalne ustawienia
+.claude/
