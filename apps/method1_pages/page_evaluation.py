@@ -14,41 +14,12 @@ from src.core.results_writer import ExperimentResults, FoldSummary, PredictionRo
 from src.method1_traditional.classifier import TraditionalClassifier
 from apps.method1_pages._shared import get_dataset
 
+_STATE_RESULTS = "eval_m1_results"
+_STATE_EXPERIMENT = "eval_m1_experiment"
+_STATE_METHODS = "eval_m1_methods"
 
-def render() -> None:
-    st.title("Ewaluacja — Metoda 1 (5-fold CV)")
-    st.caption(
-        "Porównanie czterech miar podobieństwa (SSIM, ORB, Histogram, Combined) "
-        "na tym samym podziale 5-fold CV. "
-        "Każde zdjęcie testowe porównywane jest ze wszystkimi treningowymi — może potrwać kilkanaście minut."
-    )
 
-    try:
-        dataset = get_dataset()
-    except FileNotFoundError as e:
-        st.error(str(e))
-        return
-
-    st.info(
-        "**Jak działa Metoda 1?**  \n"
-        "Dla każdego zdjęcia testowego obliczany jest score podobieństwa do **każdego** zdjęcia "
-        "treningowego. Osoba z najwyższym score wygrywa (zasada 1-NN)."
-    )
-
-    methods_to_eval = st.multiselect(
-        "Miary do ewaluacji",
-        ["ssim", "orb", "hist", "combined"],
-        default=["ssim", "hist"],
-        help="ORB i Combined są wolniejsze — każde zdjęcie przetwarza się dłużej. Zacznij od SSIM + Histogram.",
-    )
-    if not methods_to_eval:
-        st.warning("Wybierz co najmniej jedną miarę.")
-        return
-
-    if not st.button("🔬 Uruchom ewaluację 5-fold CV", type="primary", use_container_width=True):
-        st.info("Kliknij aby uruchomić. Czas: ~2–5 min dla SSIM/Histogram, dłużej dla ORB.")
-        return
-
+def _run_evaluation(methods_to_eval: list[str], dataset) -> None:
     all_pairs = dataset.all_pairs()
     all_paths = [str(p) for p, _ in all_pairs]
     all_labels = [m.person_id for _, m in all_pairs]
@@ -105,10 +76,17 @@ def render() -> None:
             step += 1
 
     progress.progress(1.0, text="Gotowe!")
-    st.success("✅ Ewaluacja zakończona!")
+    log.empty()
 
-    # ---- Wyniki ----
+    st.session_state[_STATE_RESULTS] = results_summary
+    st.session_state[_STATE_EXPERIMENT] = experiment
+    st.session_state[_STATE_METHODS] = methods_to_eval
+
+
+def _show_results(results_summary: dict, methods_to_eval: list[str]) -> None:
+    st.success("✅ Ewaluacja zakończona!")
     st.header("Wyniki porównania miar")
+
     comparison = []
     for method in methods_to_eval:
         fold_data = results_summary[method]
@@ -124,20 +102,65 @@ def render() -> None:
         })
     st.dataframe(pd.DataFrame(comparison), use_container_width=True, hide_index=True)
 
-    # Per-fold tabela dla każdej metody
     for method in methods_to_eval:
         with st.expander(f"Szczegóły per fold — {method.upper()}"):
             rows = results_summary[method]
             df = pd.DataFrame([{
-                "Fold":       r["fold"],
-                "Accuracy":   f"{r['acc']:.3f}",
-                "Top-3":      f"{r['top3']:.3f}",
-                "Top-5":      f"{r['top5']:.3f}",
-                "Czas [s]":   f"{r['time_s']:.1f}",
+                "Fold":     r["fold"],
+                "Accuracy": f"{r['acc']:.3f}",
+                "Top-3":    f"{r['top3']:.3f}",
+                "Top-5":    f"{r['top5']:.3f}",
+                "Czas [s]": f"{r['time_s']:.1f}",
             } for r in rows])
             st.dataframe(df, use_container_width=True, hide_index=True)
 
     st.divider()
     if st.button("📊 Eksportuj wyniki do Excela", use_container_width=True):
-        saved = experiment.save()
+        saved = st.session_state[_STATE_EXPERIMENT].save()
         st.success(f"Zapisano: `{saved}`")
+
+
+def render() -> None:
+    st.title("Ewaluacja — Metoda 1 (5-fold CV)")
+    st.caption(
+        "Porównanie czterech miar podobieństwa (SSIM, ORB, Histogram, Combined) "
+        "na tym samym podziale 5-fold CV. "
+        "Każde zdjęcie testowe porównywane jest ze wszystkimi treningowymi — może potrwać kilkanaście minut."
+    )
+
+    try:
+        dataset = get_dataset()
+    except FileNotFoundError as e:
+        st.error(str(e))
+        return
+
+    st.info(
+        "**Jak działa Metoda 1?**  \n"
+        "Dla każdego zdjęcia testowego obliczany jest score podobieństwa do **każdego** zdjęcia "
+        "treningowego. Osoba z najwyższym score wygrywa (zasada 1-NN)."
+    )
+
+    methods_to_eval = st.multiselect(
+        "Miary do ewaluacji",
+        ["ssim", "orb", "hist", "combined"],
+        default=["ssim", "hist"],
+        help="ORB i Combined są wolniejsze. Zacznij od SSIM + Histogram.",
+    )
+    if not methods_to_eval:
+        st.warning("Wybierz co najmniej jedną miarę.")
+        return
+
+    if st.button("🔬 Uruchom ewaluację 5-fold CV", type="primary", use_container_width=True):
+        st.session_state.pop(_STATE_RESULTS, None)
+        st.session_state.pop(_STATE_EXPERIMENT, None)
+        st.session_state.pop(_STATE_METHODS, None)
+        with st.spinner("Trwa ewaluacja..."):
+            _run_evaluation(methods_to_eval, dataset)
+
+    if _STATE_RESULTS in st.session_state:
+        _show_results(
+            st.session_state[_STATE_RESULTS],
+            st.session_state[_STATE_METHODS],
+        )
+    else:
+        st.info("Kliknij przycisk powyżej, aby uruchomić pełną ewaluację. Czas: ~2–5 min dla SSIM/Histogram.")
