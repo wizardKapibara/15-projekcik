@@ -1568,3 +1568,83 @@ Plik `notatki/01_początek.md` zawiera pierwotne założenia projektowe. Poniże
 | `MetadataAnalysis` (Excel) | Arkusz z accuracy per osoba | **Nie zaimplementowany** — możliwa analiza post-hoc z Excela predykcji |
 | Sidebar | Nieplanowany | **`sidebar_shortcuts.py`** — skróty do folderów i plików |
 | Struktura `apps/` | Płaska (tylko app_method1.py i app_method2.py) | **Hierarchiczna** — `method1_pages/` i `method2_pages/` jako podpakiety |
+
+---
+
+## 20. Słownik pojęć — pełne nazwy, tłumaczenia, wyjaśnienia
+
+Wszystkie skróty używane w projekcie wraz z pełną nazwą angielską, polskim tłumaczeniem i krótkim wyjaśnieniem.
+
+---
+
+### Metody ekstrakcji cech
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **LBP** | Local Binary Patterns | Lokalne wzorce binarne | Teksturowy deskryptor obrazu: dla każdego piksela porównuje jego wartość z 8 sąsiadami (P=8, R=1). Wynik to 8-bitowy kod binarny — np. `11001010`. Kody są grupowane w histogram 10-binowy (metoda `uniform`). Dobry do opisu faktur i bruzd. |
+| **HOG** | Histogram of Oriented Gradients | Histogram orientacji gradientów | Deskryptor kształtu: obraz jest dzielony na komórki 16×16 px, w każdej obliczany jest histogram 9 kierunków gradientów (krawędzi). Komórki grupowane w bloki 2×2 i normalizowane. Surowy wektor ma 16 740 wartości, redukowany przez PCA do 100. |
+| **Gabor** | Gabor Filters | Filtry Gabora | Bank 32 filtrów (8 orientacji × 4 częstotliwości) wzorowanych na receptorach kory wzrokowej. Każdy filtr to iloczyn sinusoidy i gaussianu — wykrywa tekstury w określonym kierunku i skali. Z każdego filtra pobierane są: średnia i odchylenie standardowe odpowiedzi → 64 cechy. |
+| **Minutiae** | Lip Ridge Minutiae | Minucje bruzd ust | Metoda zapożyczona z daktyloskopii. Po binaryzacji i szkieletyzacji obrazu obliczana jest liczba skrzyżowań linii (Crossing Number, CN). CN=1 → zakończenie, CN=3 → rozwidlenie, CN≥4 → skrzyżowanie. Łącznie 7 cech statystycznych. |
+
+---
+
+### Miary podobieństwa (Metoda 1)
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **SSIM** | Structural Similarity Index | Wskaźnik strukturalnego podobieństwa | Porównuje dwa obrazy (przeskalowane do 256×128 px, grayscale) pod kątem luminancji, kontrastu i struktury. Wynik ∈ [−1, 1]; wartość 1 oznacza identyczne obrazy. Lepszy niż MSE bo uwzględnia lokalne zależności przestrzenne. |
+| **ORB** | Oriented FAST and Rotated BRIEF | Orientowane deskryptory punktów kluczowych | Wykrywa punkty kluczowe (narożniki, krawędzie) algorytmem FAST, a następnie opisuje je deskryptorami BRIEF. Dopasowuje pary punktów między obrazami (Brute-Force Matcher). Score = liczba dopasowań / łączna liczba punktów ∈ [0, 1]. |
+| **Hist** | Histogram Correlation | Korelacja histogramów | Porównuje znormalizowane histogramy jasności obu obrazów (256 binów). Metoda korelacji Pearsona — wynik ∈ [−1, 1]. Szybka, ale wrażliwa na zmiany oświetlenia. |
+| **Combined** | Combined Score (Weighted Combination) | Kombinacja ważona | Ważona średnia trzech powyższych miar: SSIM×0.5 + ORB×0.25 + Hist×0.25. Wartości SSIM i Hist normalizowane z [−1,1] → [0,1] przed sumowaniem. |
+
+---
+
+### Klasyfikatory
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **SVM** | Support Vector Machine | Maszyna wektorów nośnych | Klasyfikator wyznaczający hiperpłaszczyznę maksymalnego marginesu między klasami. Używa jądra RBF (Radial Basis Function) do mapowania cech do wymiaru, gdzie klasy są liniowo separowalne. Parametry: C=10 (kara za błędy), gamma='scale'. Probabilistyka przez skalowanie Platta (OvO — 231 binarnych klasyfikatorów dla 22 klas). |
+| **RF** | Random Forest | Las losowy | Ensemble 200 niezależnych drzew decyzyjnych, każde trenowane na losowym podzbiorze danych (bagging) i losowym podzbiorze cech (sqrt(181) ≈ 13 cech/węzeł). Wynik to głosowanie większościowe. Odporny na przeuczenie, daje naturalny ranking ważności cech. Parametr `class_weight='balanced'` koryguje nierównoliczne klasy. |
+| **k-NN** | k-Nearest Neighbors | k Najbliższych sąsiadów | Klasyfikuje obraz przez znalezienie k=15 najbliższych obrazów treningowych w przestrzeni 181-wymiarowej (miara Euklidesowa). Prawdopodobieństwo klasy obliczane własnym algorytmem: softmax z minimalnych odległości do każdej klasy (funkcja `_knn_softmax_proba`), nie standardowe głosowanie. |
+
+---
+
+### Techniki ML i oceny jakości
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **PCA** | Principal Component Analysis | Analiza głównych składowych | Metoda redukcji wymiarowości: znajduje kierunki (główne składowe) o największej wariancji danych. HOG daje 16 740 cech — PCA redukuje je do 100 najważniejszych składowych. Dopasowywany wyłącznie na zbiorze treningowym (bez danych testowych). |
+| **CV** | Cross-Validation | Walidacja krzyżowa | Technika oceny modelu: dane dzielone są na K fragmentów (foldów). Model trenowany K razy, za każdym razem jeden fold jest zbiorem testowym, pozostałe K−1 treningowym. Daje rzetelną ocenę bez przeuczenia. |
+| **5-fold CV** | 5-fold Stratified Cross-Validation | 5-foldowa stratyfikowana walidacja krzyżowa | Walidacja krzyżowa z K=5. Słowo „stratified" oznacza, że każdy fold zachowuje proporcje klas z całego datasetu. Seed=42 zapewnia powtarzalność podziałów. |
+| **F1** | F1-score (macro-averaged) | Miara F1 (makro uśredniona) | Harmoniczna średnia precyzji i czułości: F1 = 2·(P·R)/(P+R). „Macro" oznacza, że F1 jest obliczane osobno dla każdej z 22 klas, a następnie uśredniane (każda klasa liczy się jednakowo, niezależnie od liczności). |
+| **Accuracy** | Top-1 Accuracy | Dokładność (top-1) | Procent obrazów, dla których klasyfikator wskazał poprawną osobę na pierwszym miejscu (najwyższe prawdopodobieństwo). Baseline losowy dla 22 klas: 1/22 ≈ 4.5%. |
+| **Top-3** | Top-3 Accuracy | Dokładność top-3 | Procent obrazów, dla których poprawna osoba znalazła się wśród 3 kandydatów z najwyższym prawdopodobieństwem. Ważna miara dla zastosowań asystujących (np. przeszukiwanie bazy). |
+| **Top-5** | Top-5 Accuracy | Dokładność top-5 | Jak Top-3, ale wśród 5 kandydatów. Wyższe wartości Top-5 przy niskim Top-1 sugerują, że model „wie" o kim mowa, ale nie jest wystarczająco pewny. |
+| **Confusion Matrix** | Confusion Matrix | Macierz pomyłek | Macierz 22×22, gdzie wiersz to prawdziwa klasa, kolumna to przewidywana. Przekątna (zielona) to poprawne identyfikacje. Elementy poza przekątną (czerwone) to błędy — można z nich odczytać które osoby są ze sobą mylone. |
+
+---
+
+### Preprocessing i przetwarzanie obrazów
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **CLAHE** | Contrast Limited Adaptive Histogram Equalization | Adaptacyjne wyrównanie histogramu z ograniczeniem kontrastu | Wzmacnia lokalny kontrast obrazu dzieląc go na kafle 8×8 px i wyrównując histogram każdego kafla osobno. Parametr `clipLimit=2.0` zapobiega nadmiernemu wzmocnieniu szumu. Stosowany po konwersji do grayscale. |
+| **Bilateral Filter** | Bilateral Filter | Filtr bilateralny | Wygładza obraz zachowując krawędzie (w przeciwieństwie do rozmycia Gaussowskiego). Uwzględnia zarówno podobieństwo przestrzenne jak i wartości pikseli. Parametry: d=9 (rozmiar okna), σ=75 (obie składowe). Usuwa szum aparatu fotograficznego. |
+| **Grayscale** | Grayscale conversion | Konwersja do skali szarości | Przekształcenie obrazu RGB (3 kanały) do jednokanałowego obrazu jasności. Wzór: Y = 0.299·R + 0.587·G + 0.114·B (standard BT.601). Zmniejsza wymiarowość i uniezależnia od koloru. |
+| **CN** | Crossing Number | Liczba skrzyżowań | Miara topologiczna ze szkieletyzacji odcisków: dla każdego piksela szkieletu zlicza ile razy zmienia się wartość (0/1) wśród 8 sąsiadów. CN=1 → zakończenie linii, CN=2 → zwykły piksel, CN=3 → rozwidlenie, CN≥4 → skrzyżowanie. |
+| **1-NN** | 1-Nearest Neighbor | 1 Najbliższy sąsiad | Uproszczony wariant k-NN z k=1. W Metodzie 1: dla obrazu testowego wybierana jest osoba, której zdjęcie treningowe osiągnęło najwyższy score podobieństwa (SSIM / ORB / Hist / Combined). |
+
+---
+
+### Inne pojęcia
+
+| Skrót | Pełna nazwa angielska | Polskie tłumaczenie | Wyjaśnienie |
+|---|---|---|---|
+| **GUI** | Graphical User Interface | Graficzny interfejs użytkownika | Aplikacja z interfejsem okienkowym/przeglądarkowym — w tym projekcie zbudowana w Streamlit (uruchamiana jako `streamlit run apps/app.py`). |
+| **SHA-256** | Secure Hash Algorithm 256-bit | 256-bitowy bezpieczny skrót | Funkcja skrótu kryptograficznego — tutaj używana do obliczenia „odcisku" całego datasetu. Zmiana dowolnego zdjęcia zmienia hash → automatyczny retrain modeli. |
+| **joblib** | joblib (Python library) | Biblioteka joblib | Biblioteka Python do serializacji dużych obiektów numpy i równoległego wykonywania. Używana do zapisu/wczytywania wytrenowanych modeli (`.joblib`). |
+| **Platt scaling** | Platt scaling / Platt calibration | Kalibracja Platta | Metoda konwersji wyników SVM (odległości od hiperpłaszczyzny) na prawdopodobieństwa klas przez dopasowanie funkcji logistycznej. Włączana parametrem `probability=True` w sklearn. |
+| **OvO** | One-vs-One | Jeden-przeciw-jednemu | Strategia wieloklasowa dla SVM: trenuje osobny klasyfikator binarny dla każdej pary klas. Dla 22 klas: C(22,2) = 231 klasyfikatorów. Finalna klasa wyłaniana przez głosowanie. |
+| **bagging** | Bootstrap Aggregating | Agregacja bootstrapowa | Technika ensemble: każde drzewo w Random Forest trenowane na losowej próbce ze zwracaniem (bootstrap). Różne drzewa „widzą" różne dane → mniejsza korelacja błędów → lepsza generalizacja. |
+| **M1** | Method 1 | Metoda 1 | Skrót używany w kodzie i wynikach: tradycyjne porównanie obrazów (SSIM / ORB / Hist / Combined + 1-NN). |
+| **M2** | Method 2 | Metoda 2 | Skrót używany w kodzie i wynikach: klasyczne uczenie maszynowe na wektorze 181 cech (LBP + HOG→PCA + Gabor + Minutiae → SVM / RF / k-NN). |

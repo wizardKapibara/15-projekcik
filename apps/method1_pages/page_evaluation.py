@@ -9,6 +9,9 @@ import pandas as pd
 import streamlit as st
 from sklearn.model_selection import StratifiedKFold
 
+import numpy as np
+from sklearn.metrics import f1_score, precision_score, recall_score
+
 from src.core.config import RANDOM_SEED
 from src.core.results_writer import ExperimentResults, FoldSummary, PredictionRow
 from src.method1_traditional.classifier import TraditionalClassifier
@@ -56,18 +59,24 @@ def _run_evaluation(methods_to_eval: list[str], dataset) -> None:
             top3 = fold_result["top3"]
             top5 = fold_result["top5"]
 
+            y_true = [p["true_id"]   for p in fold_result["predictions"]]
+            y_pred = [p["predicted"] for p in fold_result["predictions"]]
+            prec = precision_score(y_true, y_pred, average="macro", zero_division=0)
+            rec  = recall_score(y_true, y_pred, average="macro", zero_division=0)
+            f1   = f1_score(y_true, y_pred, average="macro", zero_division=0)
+
             results_summary[method].append({
                 "fold": fold_idx + 1, "acc": acc, "top3": top3, "top5": top5,
-                "time_s": t1 - t0,
+                "prec": prec, "rec": rec, "f1": f1, "time_s": t1 - t0,
             })
             experiment.add_fold_summary(FoldSummary(
                 fold=fold_idx + 1, method=method,
                 accuracy=acc, top3_accuracy=top3, top5_accuracy=top5,
-                precision=0.0, recall=0.0, f1=0.0, time_s=t1 - t0,
+                precision=prec, recall=rec, f1=f1, time_s=t1 - t0,
             ))
-            for pred in fold_result["predictions"]:
+            for path, pred in zip(test_paths_f, fold_result["predictions"]):
                 experiment.add_prediction(PredictionRow(
-                    image_path="", true_id=pred["true_id"], method=method,
+                    image_path=path, true_id=pred["true_id"], method=method,
                     predicted_id=pred["predicted"],
                     top3=pred["top5"][:3], top5=pred["top5"],
                     confidence=pred["confidence"],
@@ -93,11 +102,13 @@ def _show_results(results_summary: dict, methods_to_eval: list[str]) -> None:
         accs  = [r["acc"]  for r in fold_data]
         top3s = [r["top3"] for r in fold_data]
         top5s = [r["top5"] for r in fold_data]
+        f1s   = [r["f1"]   for r in fold_data]
         comparison.append({
             "Metoda":                  method.upper(),
             "Accuracy (mean ± std)":   f"{np.mean(accs):.3f} ± {np.std(accs):.3f}",
             "Top-3 (mean)":            f"{np.mean(top3s):.3f}",
             "Top-5 (mean)":            f"{np.mean(top5s):.3f}",
+            "F1 macro (mean)":         f"{np.mean(f1s):.3f}",
             "Czas/fold [s]":           f"{np.mean([r['time_s'] for r in fold_data]):.1f}",
         })
     st.dataframe(pd.DataFrame(comparison), use_container_width=True, hide_index=True)
@@ -106,11 +117,14 @@ def _show_results(results_summary: dict, methods_to_eval: list[str]) -> None:
         with st.expander(f"Szczegóły per fold — {method.upper()}"):
             rows = results_summary[method]
             df = pd.DataFrame([{
-                "Fold":     r["fold"],
-                "Accuracy": f"{r['acc']:.3f}",
-                "Top-3":    f"{r['top3']:.3f}",
-                "Top-5":    f"{r['top5']:.3f}",
-                "Czas [s]": f"{r['time_s']:.1f}",
+                "Fold":       r["fold"],
+                "Accuracy":   f"{r['acc']:.3f}",
+                "Top-3":      f"{r['top3']:.3f}",
+                "Top-5":      f"{r['top5']:.3f}",
+                "Precision":  f"{r['prec']:.3f}",
+                "Recall":     f"{r['rec']:.3f}",
+                "F1 (macro)": f"{r['f1']:.3f}",
+                "Czas [s]":   f"{r['time_s']:.1f}",
             } for r in rows])
             st.dataframe(df, use_container_width=True, hide_index=True)
 

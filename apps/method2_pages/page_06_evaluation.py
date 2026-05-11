@@ -134,7 +134,27 @@ def _run_evaluation(clf_names: list[str], hog_pca: int, use_cache: bool) -> None
         all_results[clf_name] = fold_results
 
         cm_total = sum(r["cm"] for r in fold_results)
-        experiment.add_confusion_matrix(clf_name, cm_total, fold_results[0]["classes"].tolist())
+        classes_all = fold_results[0]["classes"]
+        experiment.add_confusion_matrix(clf_name, cm_total, classes_all.tolist())
+
+        # Zapis PNG — tutaj, przed Streamlit, żeby st.pyplot() nie wyczyściło figury
+        PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+        plot_path = PLOTS_DIR / f"confusion_matrix_{clf_name}.png"
+        labels = [f"Nr_{c:02d}" for c in classes_all]
+        fig_cm, ax_cm = plt.subplots(figsize=(14, 11))
+        sns.heatmap(
+            cm_total, annot=True, fmt="d", cmap="Blues",
+            xticklabels=labels, yticklabels=labels,
+            ax=ax_cm, linewidths=0.3,
+        )
+        ax_cm.set_xlabel("Przewidywana klasa")
+        ax_cm.set_ylabel("Prawdziwa klasa")
+        ax_cm.set_title(f"Confusion Matrix — {clf_name.upper()} (5-fold CV)")
+        plt.xticks(rotation=45, ha="right")
+        plt.yticks(rotation=0)
+        plt.tight_layout()
+        fig_cm.savefig(str(plot_path), dpi=150, bbox_inches="tight")
+        plt.close(fig_cm)
 
     progress.progress(1.0, text="Ewaluacja zakończona!")
     log.empty()
@@ -174,28 +194,12 @@ def _show_results(all_results: dict, clf_names: list[str]) -> None:
         col3.metric("F1 macro (mean ± std)", f"{np.mean(f1s):.3f} ± {np.std(f1s):.3f}")
 
         st.write("**Macierz pomyłek (suma 5 foldów)**")
-        cm_total = sum(r["cm"] for r in results)
-        classes_labels = [f"Nr_{c:02d}" for c in results[0]["classes"]]
-
-        fig, ax = plt.subplots(figsize=(14, 11))
-        sns.heatmap(
-            cm_total, annot=True, fmt="d", cmap="Blues",
-            xticklabels=classes_labels, yticklabels=classes_labels,
-            ax=ax, linewidths=0.3,
-        )
-        ax.set_xlabel("Przewidywana klasa")
-        ax.set_ylabel("Prawdziwa klasa")
-        ax.set_title(f"Confusion Matrix — {clf_name.upper()} (5-fold CV)")
-        plt.xticks(rotation=45, ha="right")
-        plt.yticks(rotation=0)
-        plt.tight_layout()
-        st.pyplot(fig)
-
-        PLOTS_DIR.mkdir(parents=True, exist_ok=True)
         plot_path = PLOTS_DIR / f"confusion_matrix_{clf_name}.png"
-        fig.savefig(str(plot_path), dpi=150, bbox_inches="tight")
-        st.caption(f"Wykres zapisany: `{plot_path}`")
-        plt.close(fig)
+        if plot_path.exists():
+            st.image(str(plot_path), use_container_width=True)
+            st.caption(f"Wykres zapisany: `{plot_path}`")
+        else:
+            st.warning(f"Brak pliku wykresu: `{plot_path}`")
 
         st.divider()
 
@@ -282,5 +286,35 @@ def render() -> None:
                 f"Arkusze: Run_info, Predictions ({len(experiment.predictions)} wierszy), "
                 "Summary per metoda, macierze pomyłek."
             )
+
+            # Zapisz / odśwież PNG z danych session_state
+            all_results = st.session_state[_STATE_RESULTS]
+            clf_names = st.session_state[_STATE_CLF_NAMES]
+            PLOTS_DIR.mkdir(parents=True, exist_ok=True)
+            saved_plots = []
+            for clf_name in clf_names:
+                results = all_results[clf_name]
+                cm_total = sum(r["cm"] for r in results)
+                classes_all = results[0]["classes"]
+                labels = [f"Nr_{c:02d}" for c in classes_all]
+
+                fig_cm, ax_cm = plt.subplots(figsize=(14, 11))
+                sns.heatmap(
+                    cm_total, annot=True, fmt="d", cmap="Blues",
+                    xticklabels=labels, yticklabels=labels,
+                    ax=ax_cm, linewidths=0.3,
+                )
+                ax_cm.set_xlabel("Przewidywana klasa")
+                ax_cm.set_ylabel("Prawdziwa klasa")
+                ax_cm.set_title(f"Confusion Matrix — {clf_name.upper()} (5-fold CV)")
+                plt.xticks(rotation=45, ha="right")
+                plt.yticks(rotation=0)
+                plt.tight_layout()
+                plot_path = PLOTS_DIR / f"confusion_matrix_{clf_name}.png"
+                fig_cm.savefig(str(plot_path), dpi=150, bbox_inches="tight")
+                plt.close(fig_cm)
+                saved_plots.append(str(plot_path))
+
+            st.success(f"Zapisano wykresy PNG ({len(saved_plots)}): `{PLOTS_DIR}`")
     else:
         st.info("Kliknij przycisk powyżej, aby uruchomić pełną ewaluację.")
