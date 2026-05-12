@@ -2,8 +2,8 @@
 
 **Data eksperymentu:** 2026-05-11 / 2026-05-12  
 **Pliki źródłowe:**
-- `results/experiment_20260512_000916.xlsx` — Metoda 2 (ML)
-- `results/method1_cv.xlsx` — Metoda 1 (tradycyjna)
+- `results/experiment_20260512_000916.xlsx` — Metoda 2 (ML), timestamp: 2026-05-12T00:09:16
+- `results/method1_cv.xlsx` — Metoda 1 (tradycyjna), timestamp: 2026-05-12T09:28:17
 
 **Metoda ewaluacji:** 5-fold Stratified Cross-Validation (seed=42)
 
@@ -29,15 +29,15 @@
 
 ### Pełne zestawienie (posortowane wg accuracy)
 
-| # | Metoda | Klasyfikator/Miara | Accuracy (mean ± std) | Top-3 | Top-5 | F1 macro |
+| # | Metoda | Klasyfikator/Miara | Accuracy (mean ± std) | Top-3 | Top-5 | F1 macro (mean ± std) |
 |---|---|---|---|---|---|---|
-| 1 | **M1** | Combined | **90.24% ± 1.48%** | 94.97% | 95.56% | — |
-| 2 | **M2** | SVM | **84.33% ± 1.69%** | 92.62% | 95.27% | 83.89% |
-| 3 | **M2** | Random Forest | **84.33% ± 2.86%** | 92.01% | 93.78% | 83.23% |
-| 4 | **M1** | ORB | 83.73% ± 5.89% | 89.95% | 91.44% | — |
-| 5 | **M2** | k-NN | 77.81% ± 3.06% | 88.17% | 91.43% | 76.39% |
-| 6 | **M1** | SSIM | 76.62% ± 2.38% | 88.16% | 90.82% | — |
-| 7 | **M1** | Histogram | 30.50% ± 6.49% | 42.93% | 50.34% | — |
+| 1 | **M1** | Combined | **90.24% ± 1.48%** | 94.97% | 95.56% | **89.40% ± 1.75%** |
+| 2 | **M2** | SVM | **84.33% ± 1.69%** | 92.62% | 95.27% | 83.89% ± 2.13% |
+| 3 | **M2** | Random Forest | **84.33% ± 2.86%** | 92.01% | 93.78% | 83.23% ± 3.35% |
+| 4 | **M1** | ORB | 83.73% ± 5.89% | 89.95% | 91.44% | 82.81% ± 6.26% |
+| 5 | **M2** | k-NN | 77.81% ± 3.06% | 88.17% | 91.43% | 76.39% ± 3.57% |
+| 6 | **M1** | SSIM | 76.62% ± 2.38% | 88.16% | 90.82% | 75.00% ± 3.08% |
+| 7 | **M1** | Histogram | 30.50% ± 6.49% | 42.93% | 50.34% | 30.15% ± 6.10% |
 | — | *Baseline losowy* | — | *4.55%* | *13.64%* | *22.73%* | — |
 
 ---
@@ -83,51 +83,51 @@
 
 ### SSIM (Structural Similarity Index, 1-NN)
 
-| Fold | Accuracy | Top-3 | Top-5 | Czas [s] |
-|---|---|---|---|---|
-| 1 | **80.88%** | 89.71% | 92.65% | 66.3 |
-| 2 | 75.00% | 86.76% | 91.18% | 77.1 |
-| 3 | 75.00% | 88.24% | 91.18% | 71.5 |
-| 4 | 74.63% | 85.07% | 86.57% | 70.2 |
-| 5 | 77.61% | 91.04% | 92.54% | 70.4 |
-| **MEAN ± STD** | **76.62% ± 2.38%** | **88.16%** | **90.82%** | ~71 s |
+| Fold | Accuracy | Top-3 | Top-5 | Precision | Recall | F1 | Czas [s] |
+|---|---|---|---|---|---|---|---|
+| 1 | **80.88%** | 89.71% | 92.65% | 85.53% | 81.44% | 80.41% | 97.8 |
+| 2 | 75.00% | 86.76% | 91.18% | 76.54% | 74.24% | 71.13% | 69.4 |
+| 3 | 75.00% | 88.24% | 91.18% | 84.26% | 74.62% | 74.66% | 82.4 |
+| 4 | 74.63% | 85.07% | 86.57% | 81.67% | 72.73% | 73.34% | 76.9 |
+| 5 | 77.61% | 91.04% | 92.54% | 78.11% | 78.03% | 75.49% | 69.6 |
+| **MEAN ± STD** | **76.62% ± 2.38%** | **88.16%** | **90.82%** | — | — | **75.00% ± 3.08%** | ~79 s |
 
 ### ORB (Oriented FAST and Rotated BRIEF, 1-NN)
 
-| Fold | Accuracy | Top-3 | Top-5 | Czas [s] |
-|---|---|---|---|---|
-| 1 | 85.29% | 86.76% | 88.24% | 242.5 |
-| 2 | 80.88% | 89.71% | 89.71% | 219.0 |
-| 3 | 85.29% | 89.71% | 91.18% | 247.7 |
-| 4 | 74.63% | 88.06% | 91.04% | 250.8 |
-| 5 | **92.54%** | **95.52%** | **97.01%** | 389.8 |
-| **MEAN ± STD** | **83.73% ± 5.89%** | **89.95%** | **91.44%** | ~270 s |
+| Fold | Accuracy | Top-3 | Top-5 | Precision | Recall | F1 | Czas [s] |
+|---|---|---|---|---|---|---|---|
+| 1 | 85.29% | 86.76% | 88.24% | 88.48% | 86.36% | 84.41% | 385.8 |
+| 2 | 80.88% | 89.71% | 89.71% | 80.51% | 81.44% | 78.74% | 361.0 |
+| 3 | 85.29% | 89.71% | 91.18% | 89.32% | 84.85% | 84.52% | 372.6 |
+| 4 | 74.63% | 88.06% | 91.04% | 83.16% | 73.86% | 73.87% | 386.9 |
+| 5 | **92.54%** | **95.52%** | **97.01%** | 94.39% | 92.80% | 92.50% | 289.0 |
+| **MEAN ± STD** | **83.73% ± 5.89%** | **89.95%** | **91.44%** | — | — | **82.81% ± 6.26%** | ~359 s |
 
 ORB jest **najbardziej niestabilny** (std=5.89%) — Fold 5 dał 92.54%, ale Fold 4 tylko 74.63%. Liczba wykrytych punktów kluczowych silnie zależy od oświetlenia zdjęcia.
 
 ### Histogram Correlation (korelacja histogramów jasności, 1-NN)
 
-| Fold | Accuracy | Top-3 | Top-5 | Czas [s] |
-|---|---|---|---|---|
-| 1 | 25.00% | 39.71% | 45.59% | 87.7 |
-| 2 | 20.59% | 30.88% | 35.29% | 73.8 |
-| 3 | 36.76% | 47.06% | 55.88% | 74.7 |
-| 4 | 34.33% | 49.25% | 53.73% | 65.9 |
-| 5 | 35.82% | 47.76% | 61.19% | 70.6 |
-| **MEAN ± STD** | **30.50% ± 6.49%** | **42.93%** | **50.34%** | ~74 s |
+| Fold | Accuracy | Top-3 | Top-5 | Precision | Recall | F1 | Czas [s] |
+|---|---|---|---|---|---|---|---|
+| 1 | 25.00% | 39.71% | 45.59% | 26.07% | 26.52% | 23.38% | 62.3 |
+| 2 | 20.59% | 30.88% | 35.29% | 25.27% | 23.11% | 22.07% | 61.3 |
+| 3 | 36.76% | 47.06% | 55.88% | 38.33% | 38.64% | 35.97% | 65.1 |
+| 4 | 34.33% | 49.25% | 53.73% | 38.31% | 35.61% | 34.55% | 61.3 |
+| 5 | 35.82% | 47.76% | 61.19% | 37.73% | 35.61% | 34.81% | 64.2 |
+| **MEAN ± STD** | **30.50% ± 6.49%** | **42.93%** | **50.34%** | — | — | **30.15% ± 6.10%** | ~63 s |
 
 Histogram jest **najsłabszą metodą** — 30.50% to zaledwie 6.7× ponad baseline. Rozkład jasności pikseli nie opisuje struktury bruzd; jest wrażliwy na zmiany ekspozycji i oświetlenia.
 
 ### Combined Score (SSIM×0.5 + ORB×0.25 + Hist×0.25, 1-NN)
 
-| Fold | Accuracy | Top-3 | Top-5 | Czas [s] |
-|---|---|---|---|---|
-| 1 | 89.71% | 95.59% | 97.06% | 394.2 |
-| 2 | 88.24% | 91.18% | 92.65% | 423.0 |
-| 3 | **91.18%** | **98.53%** | **98.53%** | 399.3 |
-| 4 | 89.55% | 95.52% | 95.52% | 428.4 |
-| 5 | **92.54%** | 94.03% | 94.03% | 412.8 |
-| **MEAN ± STD** | **90.24% ± 1.48%** | **94.97%** | **95.56%** | ~412 s |
+| Fold | Accuracy | Top-3 | Top-5 | Precision | Recall | F1 | Czas [s] |
+|---|---|---|---|---|---|---|---|
+| 1 | 89.71% | 95.59% | 97.06% | 93.35% | 90.15% | 89.84% | 361.5 |
+| 2 | 88.24% | 91.18% | 92.65% | 88.18% | 87.50% | 86.23% | 468.5 |
+| 3 | **91.18%** | **98.53%** | **98.53%** | 93.94% | 90.53% | 90.24% | 744.0 |
+| 4 | 89.55% | 95.52% | 95.52% | 91.59% | 89.39% | 89.22% | 669.8 |
+| 5 | **92.54%** | 94.03% | 94.03% | 94.17% | 92.80% | 91.49% | 736.4 |
+| **MEAN ± STD** | **90.24% ± 1.48%** | **94.97%** | **95.56%** | — | — | **89.40% ± 1.75%** | ~596 s |
 
 Combined jest **najdokładniejszy i najbardziej stabilny** (std=1.48%) spośród wszystkich metod. Łączenie trzech niezależnych sygnałów redukuje błędy przypadkowe każdej z miar.
 
@@ -175,12 +175,12 @@ Combined jest **najdokładniejszy i najbardziej stabilny** (std=1.48%) spośród
 | M2 SVM | ~0.8 s | ~0.8 s | **~8 s** |
 | M2 Random Forest | ~1.2 s | ~1.2 s | **~12 s** |
 | M2 k-NN | ~0.8 s | ~0.8 s | **~8 s** |
-| M1 SSIM | brak treningu | ~71 s | **~6 min** |
-| M1 ORB | brak treningu | ~270 s | **~22 min** |
-| M1 Histogram | brak treningu | ~74 s | **~6 min** |
-| M1 Combined | brak treningu | ~412 s | **~34 min** |
+| M1 Histogram | brak treningu | ~63 s | **~5 min** |
+| M1 SSIM | brak treningu | ~79 s | **~7 min** |
+| M1 ORB | brak treningu | ~359 s | **~30 min** |
+| M1 Combined | brak treningu | ~596 s | **~50 min** |
 
-SVM jest **~250× szybszy** od Combined przy porównywalnym lub tylko nieznacznie niższym wyniku.
+SVM jest **~4500× szybszy** od Combined (8 s vs ~50 min) przy accuracy niższej tylko o 5.9 punktu procentowego.
 
 ---
 
@@ -224,22 +224,22 @@ Każda metoda oceniana była metodą 5-krotnej walidacji krzyżowej — dane dzi
 
 ### Wyniki jednym zdaniem na metodę:
 
-| Metoda | Accuracy | Interpretacja |
-|---|---|---|
-| Combined (M1) | **90,2%** | Najlepsza dokładność — ale bardzo wolna |
-| SVM (M2) | **84,3%** | Prawie tak samo dobra, 250× szybsza |
-| Random Forest (M2) | **84,3%** | Identyczny wynik jak SVM |
-| ORB (M1) | 83,7% | Dobra, ale niestabilna (±5,9%) |
-| k-NN (M2) | 77,8% | Wyraźnie słabsza od SVM/RF |
-| SSIM (M1) | 76,6% | Umiarkowana skuteczność |
-| Histogram (M1) | **30,5%** | Praktycznie bezużyteczna |
-| *Losowe zgadywanie* | *4,5%* | — |
+| Metoda | Accuracy | F1 macro | Interpretacja |
+|---|---|---|---|
+| Combined (M1) | **90,2%** | **89,4%** | Najlepsza dokładność — ale bardzo wolna (~50 min) |
+| SVM (M2) | **84,3%** | 83,9% | Prawie tak samo dobra, ~4500× szybsza |
+| Random Forest (M2) | **84,3%** | 83,2% | Identyczny wynik jak SVM |
+| ORB (M1) | 83,7% | 82,8% | Dobra, ale niestabilna (±5,9%) |
+| k-NN (M2) | 77,8% | 76,4% | Wyraźnie słabsza od SVM/RF |
+| SSIM (M1) | 76,6% | 75,0% | Umiarkowana skuteczność |
+| Histogram (M1) | **30,5%** | 30,2% | Praktycznie bezużyteczna |
+| *Losowe zgadywanie* | *4,5%* | — | — |
 
 ### Najważniejsze odkrycie
 
 **Metoda bezpośredniego porównania zdjęć (Combined, 90,2%) okazała się dokładniejsza niż uczenie maszynowe (SVM/RF, 84,3%).** Jest to wynik nieoczekiwany — zazwyczaj uczenie maszynowe przewyższa proste metody porównawcze. Wyjaśnienie jest następujące: bezpośrednie porównanie obrazów zachowuje pełną przestrzenną strukturę wzorców bruzd, podczas gdy ML widzi jedynie 181 zagregowanych liczb, tracąc część informacji o rozmieszczeniu przestrzennym.
 
-**Jednak** Combined potrzebuje ~34 minuty na pełny test, a SVM — zaledwie ~8 sekund. Różnica: 250-krotna. Dla systemu działającego w czasie rzeczywistym jedyną praktyczną opcją jest ML.
+**Jednak** Combined potrzebuje ~50 minut na pełny test, a SVM — zaledwie ~8 sekund. Różnica: ~4500-krotna. Dla systemu działającego w czasie rzeczywistym jedyną praktyczną opcją jest ML.
 
 ---
 
@@ -284,7 +284,7 @@ Każda metoda oceniana była metodą 5-krotnej walidacji krzyżowej — dane dzi
 
 1. **Cheiloskopia jest wykonalna biometrycznie** — system bez żadnej wiedzy wstępnej, ucząc się wyłącznie z 270 zdjęć, potrafi rozpoznać osobę spośród 22 z 84–90% skutecznością.
 
-2. **Metoda 1 (Combined) jest najdokładniejsza, ale niepraktyczna** — 90,2% przy czasie 34 minut na CV jest do przyjęcia w badaniach laboratoryjnych, ale wyklucza zastosowania czasu rzeczywistego.
+2. **Metoda 1 (Combined) jest najdokładniejsza, ale niepraktyczna** — 90,2% przy czasie ~50 minut na CV jest do przyjęcia w badaniach laboratoryjnych, ale wyklucza zastosowania czasu rzeczywistego.
 
 3. **Metoda 2 (SVM/RF) to kompromis dokładność–szybkość** — 84,3% przy czasie 8 sekund to wynik praktycznie użyteczny w systemie biometrycznym.
 
