@@ -119,7 +119,7 @@ def render() -> None:
     else:
         meta_dict = person_meta.to_dict()
         meta_df = pd.DataFrame(
-            [{"pole": k, "wartość": v} for k, v in meta_dict.items() if k != "person_id"]
+            [{"pole": k, "wartość": str(v) if v is not None else ""} for k, v in meta_dict.items() if k != "person_id"]
         )
         st.dataframe(meta_df, use_container_width=True, hide_index=True)
 
